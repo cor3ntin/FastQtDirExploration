@@ -10,6 +10,10 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef Q_OS_WIN
+#include <Windows.h>
+#endif
+
 struct LightFileInfo{
     QString path;
     quint64 size;
@@ -25,6 +29,12 @@ private:
 #ifdef Q_OS_UNIX
     mode_t m_unix_mode;
 #endif
+#ifdef Q_OS_WIN
+    DWORD m_win_attributes;
+
+    friend void item(const QDir &, const WIN32_FIND_DATA &, QList<LightFileInfo> &, QDir::Filters);
+#endif
+
 
     friend bool listEntries(const QDir &, QList<LightFileInfo> &, QDir::Filters);
 };
