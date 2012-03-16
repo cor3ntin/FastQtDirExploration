@@ -4,14 +4,16 @@
 #include <QDebug>
 #include <QElapsedTimer>
 
+using namespace fast_dir_exploration;
+
 void explore(const QDir & dir){
     LightFileInfoList list;
     //qDebug()<<dir.absolutePath();
     bool success = listEntries(dir, list, QDir::NoDotAndDotDot);
     Q_FOREACH(const LightFileInfo & i, list){
-        qDebug()<<i.path << i.size << i.modificationDate;
-        if(i.isDirectory()){
-            explore(QDir(i.path));
+        qDebug()<<i.path() << i.size() << i.lastModified();
+        if(i.isDir()){
+            explore(QDir(i.path()));
         }
     }
 }
