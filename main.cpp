@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     QTextCodec::setCodecForCStrings(codec);
     QElapsedTimer timer;
     timer.start();
-    explore(QDir("C:\\dev\\projects\\out\\transition-proto1\\out"));
+    explore(QDir("."));
     qDebug() << "The fast operation took" << timer.elapsed() << "milliseconds";
 
     qDebug() <<"***********************************************************************";
@@ -44,6 +44,6 @@ int main(int argc, char *argv[]){
 
 
     timer.restart();
-    explore_slow(QDir("C:\\dev\\projects\\out\\transition-proto1\\out"));
+    explore_slow(QDir("."));
     qDebug() << "The slow operation took" << timer.elapsed() << "milliseconds";
 }

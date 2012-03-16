@@ -71,7 +71,7 @@ bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filte
         file.modificationDate.setTime_t(st.st_mtime);
         file.size =  st.st_size;
         file.m_unix_mode = st.st_mode;
-        printf ("%s\n", file.path.toLocal8Bit().constData());
+        list.append(file);
 
         delete fullpath;
     }
