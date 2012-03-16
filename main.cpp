@@ -1,8 +1,8 @@
 #include <QtCore/QCoreApplication>
+#include "fastfolderexploration.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-
-    return a.exec();
+    LightFileInfoList list;
+    bool success = listEntries(QDir("."), list, QDir::NoDotAndDotDot);
 }
