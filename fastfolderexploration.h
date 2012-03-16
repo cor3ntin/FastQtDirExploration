@@ -14,18 +14,24 @@
 #include <Windows.h>
 #endif
 
+namespace fast_dir_exploration{
+
+
 struct LightFileInfo{
-    QString path;
-    quint64 size;
-    QDateTime modificationDate;
 
     bool isFile() const;
-    bool isDirectory() const;
+    bool isDir() const;
     bool isSymlink() const;
     bool isHidden() const;
     QString fileName() const;
+    QString path() const;
+    quint64 size() const;
+    QDateTime lastModified() const;
 
 private:
+    QString m_path;
+    quint64 m_size;
+    QDateTime m_modificationDate;
 #ifdef Q_OS_UNIX
     mode_t m_unix_mode;
 #endif
@@ -41,7 +47,9 @@ private:
 
 typedef QList<LightFileInfo> LightFileInfoList;
 
- bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filters);
+bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filters);
+
+}
 
 
 #endif // FASTFOLDEREXPLORATION_H

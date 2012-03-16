@@ -1,14 +1,22 @@
 #include "fastfolderexploration.h"
-#include <iostream>
-#include <QDebug>
 
 
+namespace fast_dir_exploration{
 
+QString LightFileInfo::path() const{
+	return m_path;
+}
+quint64 LightFileInfo::size() const{
+	return m_size;
+}
+QDateTime LightFileInfo::lastModified() const{
+	return m_modificationDate;
+}
 
 QString LightFileInfo::fileName() const{
-    int slash = path.lastIndexOf(QLatin1Char('/'));
+    int slash = m_path.lastIndexOf(QLatin1Char('/'));
     if (slash != -1)
-        return path.mid(slash + 1);
+        return m_path.mid(slash + 1);
     return QString::null;
 }
 
@@ -20,7 +28,7 @@ QString LightFileInfo::fileName() const{
 bool LightFileInfo::isFile() const{
     return S_ISREG(m_unix_mode);
 }
-bool LightFileInfo::isDirectory() const{
+bool LightFileInfo::isDir() const{
     return S_ISDIR(m_unix_mode);
 }
 bool LightFileInfo::isSymlink() const{
@@ -28,9 +36,9 @@ bool LightFileInfo::isSymlink() const{
 }
 
 bool LightFileInfo::isHidden() const{
-    for(int i = path.size()-1; i>=0; i--){
-        const QChar & c = path.at(i);
-        if(c == '.')
+    for(int i = m_path.size()-1; i>=0; i--){
+        const QChar & c = m_path.at(i);
+        if(c == '.' && i>0 && m_path.at(i-1)=='/')
             return true;
         if(c == '/')
             return false;
@@ -42,8 +50,6 @@ bool LightFileInfo::isHidden() const{
 
 
 
-#define LIST_FAIL do{ list.clear(); return false; }while(false);
-
 bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filters){
     DIR *d;
     struct dirent* ent;
@@ -51,25 +57,27 @@ bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filte
     int alloc_lenght = strlen(dir_path.constData()) + 2;
 
     d = opendir (dir.absolutePath().toLocal8Bit());
-    if (d == NULL)
-        LIST_FAIL
+    if (d == NULL){
+    	list.clear(); return false;
+    }
     while ((ent = readdir (d)) != NULL) {
 
-            if((filters & QDir::NoDotAndDotDot || (filters &QDir::NoDot)) && strcmp(ent->d_name, ".")==0)
+            if(((filters & QDir::NoDotAndDotDot) || (filters &QDir::NoDot)) && strcmp(ent->d_name, ".")==0)
                 continue;
-            if((filters & QDir::NoDotAndDotDot || (filters &QDir::NoDotDot)) && strcmp(ent->d_name, "..")==0)
+            if(((filters & QDir::NoDotAndDotDot) || (filters &QDir::NoDotDot)) && strcmp(ent->d_name, "..")==0)
                 continue;
 
         char *fullpath = new char[strlen(ent->d_name) + alloc_lenght];
         sprintf(fullpath, "%s/%s", dir_path.constData(), ent->d_name);
         struct stat64 st;
         if(stat64(fullpath, &st) ==-1){
-            LIST_FAIL
+        	list.clear();
+        	return false;
         }
         LightFileInfo file;
-        file.path= QString::fromLocal8Bit(fullpath);
-        file.modificationDate.setTime_t(st.st_mtime);
-        file.size =  st.st_size;
+        file.m_path= QString::fromLocal8Bit(fullpath);
+        file.m_modificationDate.setTime_t(st.st_mtime);
+        file.m_size =  st.st_size;
         file.m_unix_mode = st.st_mode;
         list.append(file);
 
@@ -88,7 +96,7 @@ bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filte
 bool LightFileInfo::isFile() const{
     return m_win_attributes & FILE_ATTRIBUTE_NORMAL;
 }
-bool LightFileInfo::isDirectory() const{
+bool LightFileInfo::isDir() const{
     return m_win_attributes & FILE_ATTRIBUTE_DIRECTORY;
 }
 bool LightFileInfo::isSymlink() const{
@@ -110,16 +118,16 @@ static inline QDateTime fileTimeToQDateTime(const FILETIME *time)
 }
 
 void item(const QDir & dir, const WIN32_FIND_DATA & d, LightFileInfoList & list, QDir::Filters filters){
-    if((filters & QDir::NoDotAndDotDot || (filters &QDir::NoDot)) && wcscmp(d.cFileName, L".")==0)
+    if(((filters & QDir::NoDotAndDotDot) || (filters &QDir::NoDot)) && wcscmp(d.cFileName, L".")==0)
         return;
-    if((filters & QDir::NoDotAndDotDot || (filters &QDir::NoDotDot)) && wcscmp(d.cFileName, L"..")==0)
+    if(((filters & QDir::NoDotAndDotDot) || (filters &QDir::NoDotDot)) && wcscmp(d.cFileName, L"..")==0)
         return;
 
      LightFileInfo i;
-     i.path = dir.absoluteFilePath(QString::fromWCharArray(d.cFileName)); //dir.filePath();
+     i.m_path = dir.absoluteFilePath(QString::fromWCharArray(d.cFileName)); //dir.filePath();
 
-     i.size = (d.nFileSizeHigh << 32) + d.nFileSizeLow;
-     i.modificationDate = fileTimeToQDateTime(&d.ftLastWriteTime);
+     i.m_size = (d.nFileSizeHigh << 32) + d.nFileSizeLow;
+     i.m_modificationDate = fileTimeToQDateTime(&d.ftLastWriteTime);
      i.m_win_attributes = d.dwFileAttributes;
 
      list.append(i);
@@ -143,3 +151,4 @@ bool listEntries(const QDir & dir, LightFileInfoList & list, QDir::Filters filte
 
 #endif
 
+}
